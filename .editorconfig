@@ -1,0 +1,8 @@
+root = true
+
+[*.bash]
+indent_style = space
+indent_size = 4
+
+# shfmt
+function_next_line = true
