@@ -40,6 +40,7 @@ check_envvar()
 
 check()
 {
+    check_command curl
     check_command go
     check_command jq
 
