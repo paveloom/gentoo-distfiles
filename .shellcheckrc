@@ -1,0 +1,2 @@
+# Don't warn about possible misspelling
+disable=SC2153

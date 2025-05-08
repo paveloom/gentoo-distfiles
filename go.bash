@@ -293,6 +293,7 @@ get_tag()
 process_record()
 {
     declare -n r=$1
+    # shellcheck disable=SC2178
     declare -n p=$2
 
     export log_prefix="${r["name"]}"
@@ -328,6 +329,7 @@ process_records()
         read -ra header
         while read -ra row; do
             for ((i = 0; i < "${#header[@]}"; i++)); do
+                # shellcheck disable=SC2034
                 record[${header[$i]}]="${row[$i]}"
             done
             process_record record packages
@@ -341,6 +343,7 @@ main()
 
     run_checks
 
+    # shellcheck disable=SC2034
     declare -A packages
     get_packages packages
 
