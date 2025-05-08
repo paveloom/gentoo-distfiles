@@ -50,7 +50,7 @@ check_envvar()
     [[ -v "$1" ]] || fatal "\`$1\` is unset"
 }
 
-check()
+run_checks()
 {
     check_command curl
     check_command go
@@ -287,7 +287,7 @@ process_record()
     publish record tag
 }
 
-process()
+process_records()
 {
     {
         declare -A record
@@ -304,12 +304,12 @@ process()
 
 main()
 {
-    check
+    run_checks
 
     declare -A packages
     get_packages packages
 
-    process
+    process_records
 }
 
 main
