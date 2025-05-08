@@ -62,8 +62,8 @@ check()
 pack()
 {
     declare -n r=$1
+    declare -n t=$2
 
-    local tarball_url=$2
     local ret
 
     temp_dir="$(mktemp -d)"
@@ -77,7 +77,7 @@ pack()
             curl \
                 --location --silent --show-error --fail-with-body \
                 --header "Authorization: Bearer $GITHUB_TOKEN" \
-                "$tarball_url" -o "source.tar.gz" 2>&1
+                "${t["tarball_url"]}" -o "source.tar.gz" 2>&1
         ); then
             error "$ret"
             fatal "failed to fetch the tarball"
@@ -115,16 +115,17 @@ pack()
             tar --owner 0 --group 0 --posix -acf go-mod.tar.xz go-mod
     )
 
-    cp "$temp_dir/go-mod.tar.xz" "${r["name"]}-deps.tar.xz"
+    cp "$temp_dir/go-mod.tar.xz" "${r["name"]}-${t["version"]}-deps.tar.xz"
 }
 
-get_tarball_github()
+get_tag_github()
 {
     declare -n r=$1
+    declare -n t=$2
 
     local ret
 
-    info "querying tags..."
+    info "querying the latest tag..."
 
     local tags
     if ! ret=$(
@@ -138,52 +139,48 @@ get_tarball_github()
     fi
     tags="$ret"
 
-    local tag
+    local latest_tag
     if ! ret="$(jq '.[1]' <<<"$tags" 2>&1)"; then
         error "$ret"
         fatal "failed to parse the tags"
     fi
-    tag="$ret"
+    latest_tag="$ret"
 
-    if [[ "$tag" == "null" ]]; then
+    if [[ "$latest_tag" == "null" ]]; then
         fatal "there are no tags"
     fi
 
     local version
-    if ! ret="$(jq -r '.["name"]' <<<"$tag" 2>&1)"; then
+    if ! ret="$(jq -r '.["name"]' <<<"$latest_tag" 2>&1)"; then
         error "$ret"
         fatal "failed to parse the version of the latest tag"
     fi
     version="$ret"
 
-    info "version: $version"
-
     local tarball_url
-    if ! ret="$(jq -r '.["tarball_url"]' <<<"$tag" 2>&1)"; then
+    if ! ret="$(jq -r '.["tarball_url"]' <<<"$latest_tag" 2>&1)"; then
         error "$ret"
         fatal "failed to parse the tarball URL of the latest tag"
     fi
     tarball_url="$ret"
 
-    res="$tarball_url"
+    t["version"]="$version"
+    t["tarball_url"]="$tarball_url"
 }
 
-get_tarball()
+get_tag()
 {
     declare -n r=$1
 
     case ${r["forge"]} in
     "github")
-        get_tarball_github record
+        get_tag_github record tag
         ;;
     *)
         warn "unknown forge ${r["forge"]}"
         return 1
         ;;
     esac
-    tarball_url="$res"
-
-    res="$tarball_url"
 }
 
 process()
@@ -194,15 +191,16 @@ process()
 
     info "url: https://${r["host"]}/${r["owner"]}/${r["repo"]}"
 
-    if ! get_tarball record; then
-        warn "failed to get the tarball"
+    declare -A tag
+    if ! get_tag record tag; then
+        warn "failed to get the tag"
         return
     fi
-    tarball_url="$res"
 
-    info "tarball_url: $tarball_url"
+    info "version: ${tag["version"]}"
+    info "tarball_url: ${tag["tarball_url"]}"
 
-    pack record "$tarball_url"
+    pack record tag
 }
 
 check
