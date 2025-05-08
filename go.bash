@@ -183,7 +183,7 @@ pack()
         mapfile -t mod_paths < <(find . -mindepth 2 -name go.mod -print)
         for mod_path in "${mod_paths[@]}"; do
             local mod_dir_path="${mod_path%/go.mod}"
-            cd "$mod_dir_path" || "failed to enter the mod directory $mod_dir_path"
+            cd "$mod_dir_path" || fatal "failed to enter the mod directory $mod_dir_path"
             go mod download
         done
 
