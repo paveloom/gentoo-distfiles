@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 declare log_prefix=""
+declare log_debug_enabled=false
 
 log()
 {
@@ -16,7 +17,9 @@ log()
 
 debug()
 {
-    log "[DEBUG]" "$*"
+    if $log_debug_enabled; then
+        log "[DEBUG]" "$*"
+    fi
 }
 
 info()
@@ -38,6 +41,31 @@ fatal()
 {
     error "$*"
     exit 1
+}
+
+function handle_args()
+{
+    for arg in "$@"; do
+        shift
+        case "$arg" in
+        "--debug") set -- "$@" '-d' ;;
+        "--help") set -- "$@" '-h' ;;
+        *) set -- "$@" "$arg" ;;
+        esac
+    done
+
+    while getopts ":dh" opt; do
+        case $opt in
+        d) log_debug_enabled=true ;;
+        h)
+            echo "$0 usage:"
+            echo "    -d, --debug Enable debug messages"
+            echo "    -h, --help  Show the usage message"
+            exit 0
+            ;;
+        *) warn "unknown option $OPTARG" ;;
+        esac
+    done
 }
 
 check_command()
@@ -304,6 +332,8 @@ process_records()
 
 main()
 {
+    handle_args "$@"
+
     run_checks
 
     declare -A packages
@@ -312,4 +342,4 @@ main()
     process_records
 }
 
-main
+main "$@"
