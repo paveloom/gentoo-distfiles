@@ -183,7 +183,7 @@ get_tag()
     esac
 }
 
-process()
+process_record()
 {
     declare -n r=$1
 
@@ -203,16 +203,26 @@ process()
     pack record tag
 }
 
-check
-
+process()
 {
-    declare -A record
+    {
+        declare -A record
 
-    read -ra header
-    while read -ra row; do
-        for ((i = 0; i < "${#header[@]}"; i++)); do
-            record[${header[$i]}]="${row[$i]}"
+        read -ra header
+        while read -ra row; do
+            for ((i = 0; i < "${#header[@]}"; i++)); do
+                record[${header[$i]}]="${row[$i]}"
+            done
+            process_record record
         done
-        process record
-    done
-} <go.csv
+    } <go.csv
+}
+
+main()
+{
+    check
+
+    process
+}
+
+main
