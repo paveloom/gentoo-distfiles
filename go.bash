@@ -64,6 +64,7 @@ pack()
     declare -n r=$1
 
     local tarball_url=$2
+    local ret
 
     temp_dir="$(mktemp -d)"
     debug "temp_dir=$temp_dir"
