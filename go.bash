@@ -57,6 +57,59 @@ check()
     check_command jq
 
     check_envvar GITHUB_TOKEN
+
+    if [[ -n "$GITLAB_TOKEN" ]]; then
+        export GITLAB_AUTH_HEADER="PRIVATE-TOKEN: $GITLAB_TOKEN"
+    elif [[ -n "$CI_JOB_TOKEN" ]]; then
+        export GITLAB_AUTH_HEADER="JOB-TOKEN: $CI_JOB_TOKEN"
+    else
+        fatal "\`GITLAB_TOKEN\` is unset"
+    fi
+
+    if [[ -z "$GITLAB_PROJECT_ID" ]]; then
+        if [[ -n "$CI_PROJECT_ID" ]]; then
+            export GITLAB_PROJECT_ID="$CI_PROJECT_ID"
+        else
+            fatal "\`GITLAB_PROJECT_ID\` is unset"
+        fi
+    fi
+}
+
+get_packages()
+{
+    declare -n p=$1
+
+    local ret
+
+    info "querying the package registry..."
+
+    local metadata
+    if ! ret=$(
+        curl --location --silent --show-error --fail-with-body \
+            --header "$GITLAB_AUTH_HEADER" \
+            "https://gitlab.com/api/v4/projects/$GITLAB_PROJECT_ID/packages" 2>&1
+    ); then
+        error "$ret"
+        fatal "failed to fetch the packages metadata"
+    fi
+    metadata="$ret"
+
+    [[ $metadata == "[]" ]] && return
+
+    local name_version_pairs
+    if ! ret=$(
+        jq -r '.[] | [.name, .version] | join(" ")' <<<"$metadata"
+    ); then
+        error "$ret"
+        fatal "failed to parse the name-version pairs from the packages metadata"
+    fi
+    name_version_pairs="$ret"
+
+    {
+        while read -r name version; do
+            p["$name"]+=" $version"
+        done
+    } <<<"$name_version_pairs"
 }
 
 pack()
@@ -116,6 +169,27 @@ pack()
     )
 
     cp "$temp_dir/go-mod.tar.xz" "${r["name"]}-${t["version"]}-deps.tar.xz"
+}
+
+publish()
+{
+    declare -n r=$1
+    declare -n t=$2
+
+    local file="${r["name"]}-${t["version"]}-deps.tar.xz"
+    local url="https://gitlab.com/api/v4/projects/$GITLAB_PROJECT_ID/packages/generic/${r["name"]}/${t["version"]}/$file"
+
+    info "publishing the package..."
+
+    if ! ret=$(
+        curl \
+            --location --silent --show-error --fail-with-body \
+            --header "$GITLAB_AUTH_HEADER" \
+            --upload-file "$file" "$url" 2>&1
+    ); then
+        error "$ret"
+        fatal "failed to publish the package"
+    fi
 }
 
 get_tag_github()
@@ -186,6 +260,7 @@ get_tag()
 process_record()
 {
     declare -n r=$1
+    declare -n p=$2
 
     export log_prefix="${r["name"]}"
 
@@ -200,7 +275,16 @@ process_record()
     info "version: ${tag["version"]}"
     info "tarball_url: ${tag["tarball_url"]}"
 
+    read -r -a registry_versions <<<"${p["${r["name"]}"]}"
+    for registry_version in "${registry_versions[@]}"; do
+        if [[ "${tag["version"]}" == "$registry_version" ]]; then
+            info "the latest version is already in the registry; skipping"
+            return
+        fi
+    done
+
     pack record tag
+    publish record tag
 }
 
 process()
@@ -213,7 +297,7 @@ process()
             for ((i = 0; i < "${#header[@]}"; i++)); do
                 record[${header[$i]}]="${row[$i]}"
             done
-            process_record record
+            process_record record packages
         done
     } <go.csv
 }
@@ -221,6 +305,9 @@ process()
 main()
 {
     check
+
+    declare -A packages
+    get_packages packages
 
     process
 }
