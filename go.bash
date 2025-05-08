@@ -2,24 +2,36 @@
 
 declare log_prefix=""
 
+log()
+{
+    local level=$1
+    shift
+
+    if [[ -n "$log_prefix" ]]; then
+        echo "$level $log_prefix: $*"
+    else
+        echo "$level $*"
+    fi
+}
+
 debug()
 {
-    echo "[DEBUG] $log_prefix: $*"
+    log "[DEBUG]" "$*"
 }
 
 info()
 {
-    echo "[INFO ] $log_prefix: $*"
+    log "[INFO ]" "$*"
 }
 
 warn()
 {
-    echo "[WARN ] $log_prefix: $*"
+    log "[WARN ]" "$*"
 }
 
 error()
 {
-    echo "[ERROR] $log_prefix: $*"
+    log "[ERROR]" "$*"
 }
 
 fatal()
