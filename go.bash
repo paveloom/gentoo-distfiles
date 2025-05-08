@@ -192,8 +192,13 @@ pack()
         info "compressing the dependencies..."
 
         cd "$temp_dir" || fatal "failed to switch back to the temporary directory"
-        XZ_OPT='-T0 -9' \
-            tar --owner 0 --group 0 --posix -acf go-mod.tar.xz go-mod
+
+        export XZ_OPT='-T0 -9'
+        tar \
+            --sort=name \
+            --owner 0 --group 0 --numeric-owner --posix --mtime="1970-01-01" \
+            --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+            -acf go-mod.tar.xz go-mod
     )
 
     cp "$temp_dir/go-mod.tar.xz" "${r["name"]}-${t["version"]}-deps.tar.xz"
