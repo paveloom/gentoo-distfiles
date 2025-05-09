@@ -270,7 +270,7 @@ get_tag_github()
     tags="$ret"
 
     local latest_tag
-    if ! ret="$(jq '.[1]' <<<"$tags" 2>&1)"; then
+    if ! ret="$(jq '.[0]' <<<"$tags" 2>&1)"; then
         error "$ret"
         fatal "failed to parse the tags"
     fi
