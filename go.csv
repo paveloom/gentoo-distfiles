@@ -1,2 +1,2 @@
-name    forge  host       owner       repo    path
-nekoray github github.com Mahdi-zarei nekoray core/server
+name    forge  host       owner       repo    path        method
+nekoray github github.com Mahdi-zarei nekoray core/server vendor

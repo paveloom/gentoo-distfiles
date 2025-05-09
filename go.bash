@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+ROOT="$(dirname "$(realpath "$0")")"
+
 declare log_prefix=""
 declare log_debug_enabled=false
 
@@ -150,34 +152,38 @@ pack()
     temp_dir="$(mktemp -d)"
     debug "temp_dir=$temp_dir"
 
-    (
-        cd "$temp_dir" || fatal "failed to switch to the temporary directory"
+    cd "$temp_dir" || fatal "failed to switch to the temporary directory"
 
-        info "fetching the tarball..."
-        if ! ret=$(
-            curl \
-                --location --silent --show-error --fail-with-body \
-                --header "Authorization: Bearer $GITHUB_TOKEN" \
-                "${t["tarball_url"]}" -o "source.tar.gz" 2>&1
-        ); then
-            error "$ret"
-            fatal "failed to fetch the tarball"
-        fi
+    info "fetching the tarball..."
+    if ! ret=$(
+        curl \
+            --location --silent --show-error --fail-with-body \
+            --header "Authorization: Bearer $GITHUB_TOKEN" \
+            "${t["tarball_url"]}" -o "source.tar.gz" 2>&1
+    ); then
+        error "$ret"
+        fatal "failed to fetch the tarball"
+    fi
 
-        mkdir source
-        tar -x --strip-components 1 -C source -f source.tar.gz
+    mkdir source
+    tar -x --strip-components 1 -C source -f source.tar.gz
 
-        cd source || fatal "failed to switch to the source directory"
-        cd "${r["path"]}" || fatal "failed to switch to the main module directory"
+    cd source || fatal "failed to switch to the source directory"
+    cd "${r["path"]}" || fatal "failed to switch to the main module directory"
 
-        if [[ ! -f go.mod ]]; then
-            fatal "there is no Go module at the specified path"
-        fi
+    if [[ ! -f go.mod ]]; then
+        fatal "there is no Go module at the specified path"
+    fi
 
-        info "downloading the dependencies..."
+    info "downloading the dependencies (\`go mod ${r["method"]}\`)..."
+
+    local deps_dir_name
+    case "${r["method"]}" in
+    "download")
+        deps_dir_name="go-mod"
 
         export GOFLAGS="-modcacherw"
-        export GOMODCACHE="$temp_dir/go-mod"
+        export GOMODCACHE="$temp_dir/$deps_dir_name"
 
         go mod download
         mapfile -t mod_paths < <(find . -mindepth 2 -name go.mod -print)
@@ -188,20 +194,31 @@ pack()
         done
 
         find "${GOMODCACHE}/cache/download" -type f -name '*.zip' -delete
+        ;;
+    "vendor")
+        deps_dir_name="vendor"
 
-        info "compressing the dependencies..."
+        go mod vendor -o "$temp_dir/$deps_dir_name"
+        ;;
+    *)
+        fatal "unknown method ${r["method"]}"
+        ;;
+    esac
 
-        cd "$temp_dir" || fatal "failed to switch back to the temporary directory"
+    info "compressing the dependencies..."
 
-        export XZ_OPT='-T0 -9'
-        tar \
-            --sort=name \
-            --owner 0 --group 0 --numeric-owner --posix --mtime="1970-01-01" \
-            --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
-            -acf go-mod.tar.xz go-mod
-    )
+    cd "$temp_dir" || fatal "failed to switch back to the temporary directory"
 
-    cp "$temp_dir/go-mod.tar.xz" "${r["name"]}-${t["version"]}-deps.tar.xz"
+    export XZ_OPT='-T0 -9'
+    tar \
+        --sort=name \
+        --owner 0 --group 0 --numeric-owner --posix --mtime="1970-01-01" \
+        --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+        -acf "$deps_dir_name.tar.xz" "$deps_dir_name"
+
+    cd "$ROOT" || fatal "failed to switch back to the root directory"
+
+    cp "$temp_dir/$deps_dir_name.tar.xz" "${r["name"]}-${t["version"]}-deps.tar.xz"
 }
 
 publish()
