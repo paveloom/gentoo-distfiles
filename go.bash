@@ -177,13 +177,14 @@ pack()
 
     info "downloading the dependencies (\`go mod ${r["method"]}\`)..."
 
-    local deps_dir_name
+    local deps_dir_name="deps"
+
     case "${r["method"]}" in
     "download")
-        deps_dir_name="go-mod"
+        local go_mod_cache_dir="$temp_dir/$deps_dir_name/go-mod"
 
         export GOFLAGS="-modcacherw"
-        export GOMODCACHE="$temp_dir/$deps_dir_name"
+        export GOMODCACHE="$go_mod_cache_dir"
 
         go mod download
         mapfile -t mod_paths < <(find . -mindepth 2 -name go.mod -print)
@@ -193,12 +194,11 @@ pack()
             go mod download
         done
 
-        find "${GOMODCACHE}/cache/download" -type f -name '*.zip' -delete
+        find "${go_mod_cache_dir}/cache/download" -type f -name '*.zip' -delete
         ;;
     "vendor")
-        deps_dir_name="vendor"
-
-        go mod vendor -o "$temp_dir/$deps_dir_name" &>/dev/null
+        local vendor_dir="$temp_dir/$deps_dir_name/${r["name"]}-${t["version"]}/${r["path"]}/vendor"
+        go mod vendor -o "$vendor_dir" &>/dev/null
         ;;
     *)
         fatal "unknown method ${r["method"]}"
@@ -216,7 +216,7 @@ pack()
             --sort=name \
             --owner 0 --group 0 --numeric-owner --posix --mtime="1970-01-01" \
             --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
-            -acf "$deps_dir_name.tar.xz" "$deps_dir_name" 2>&1
+            -C "$deps_dir_name" . -acf "$deps_dir_name.tar.xz" 2>&1
     ); then
         error "$ret"
         fatal "failed to compress the dependencies"
