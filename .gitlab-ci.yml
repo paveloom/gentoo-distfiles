@@ -1,0 +1,15 @@
+workflow:
+  name: Update packages
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+stages:
+  - vendor
+
+vendor:
+  stage: vendor
+  image: archlinux:latest
+  before_script:
+    - pacman -Syu --noconfirm go jq
+  script:
+    - ./go.bash
