@@ -210,11 +210,17 @@ pack()
     cd "$temp_dir" || fatal "failed to switch back to the temporary directory"
 
     export XZ_OPT='-T0 -9'
-    tar \
-        --sort=name \
-        --owner 0 --group 0 --numeric-owner --posix --mtime="1970-01-01" \
-        --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
-        -acf "$deps_dir_name.tar.xz" "$deps_dir_name"
+
+    if ! ret=$(
+        tar \
+            --sort=name \
+            --owner 0 --group 0 --numeric-owner --posix --mtime="1970-01-01" \
+            --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+            -acf "$deps_dir_name.tar.xz" "$deps_dir_name" 2>&1
+    ); then
+        error "$ret"
+        fatal "failed to compress the dependencies"
+    fi
 
     cd "$ROOT" || fatal "failed to switch back to the root directory"
 
