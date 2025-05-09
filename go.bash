@@ -198,7 +198,7 @@ pack()
     "vendor")
         deps_dir_name="vendor"
 
-        go mod vendor -o "$temp_dir/$deps_dir_name"
+        go mod vendor -o "$temp_dir/$deps_dir_name" &>/dev/null
         ;;
     *)
         fatal "unknown method ${r["method"]}"
