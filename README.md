@@ -28,6 +28,15 @@ source .env
 ./go.bash
 ```
 
+# Use
+
+Here's an example of using a package in an ebuild:
+
+```ebuild
+SRC_URI="https://github.com/owner/repo/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz
+         https://gitlab.com/api/v4/projects/69517529/packages/generic/${PN}/${PV}/${P}-deps.tar.xz"
+```
+
 # Acknowledgements
 
 This is a reimplementation of the setup at https://gitlab.fem-net.de/gentoo/fem-overlay-vendored.
