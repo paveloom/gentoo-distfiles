@@ -5,6 +5,7 @@ ROOT="$(dirname "$(realpath "$0")")"
 declare log_prefix=""
 
 declare option_debug_enabled=false
+declare option_ignore_enabled=false
 declare option_package_name=""
 declare option_publish_enabled=false
 
@@ -55,23 +56,26 @@ function handle_args()
         case "$arg" in
         "--debug") set -- "$@" '-d' ;;
         "--help") set -- "$@" '-h' ;;
+        "--ignore") set -- "$@" '-i' ;;
         "--name") set -- "$@" '-n' ;;
         "--publish") set -- "$@" '-p' ;;
         *) set -- "$@" "$arg" ;;
         esac
     done
 
-    while getopts ":dhn:p" opt; do
+    while getopts ":dhin:p" opt; do
         case $opt in
         d) option_debug_enabled=true ;;
         h)
             echo "$0 usage:"
             echo "    -d, --debug   Enable debug messages"
             echo "    -h, --help    Show the usage message"
+            echo "    -i, --ignore  Ignore existing packages"
             echo "    -n, --name    Build the package with this name"
             echo "    -p, --publish Publish the packages"
             exit 0
             ;;
+        i) option_ignore_enabled=true ;;
         n) option_package_name="$OPTARG" ;;
         p) option_publish_enabled=true ;;
         *) warn "unknown option $OPTARG" ;;
@@ -445,13 +449,15 @@ process_record()
     info "version: ${revision["version"]}"
     info "tarball_url: ${revision["tarball_url"]}"
 
-    read -r -a registry_versions <<<"${p["${r["name"]}"]}"
-    for registry_version in "${registry_versions[@]}"; do
-        if [[ "${revision["version"]}" == "$registry_version" ]]; then
-            info "the latest version is already in the registry; skipping"
-            return
-        fi
-    done
+    if ! $option_ignore_enabled; then
+        read -r -a registry_versions <<<"${p["${r["name"]}"]}"
+        for registry_version in "${registry_versions[@]}"; do
+            if [[ "${revision["version"]}" == "$registry_version" ]]; then
+                info "the latest version is already in the registry; skipping"
+                return
+            fi
+        done
+    fi
 
     pack record revision
 
@@ -487,7 +493,10 @@ main()
 
     # shellcheck disable=SC2034
     declare -A packages
-    get_packages packages
+
+    if ! $option_ignore_enabled; then
+        get_packages packages
+    fi
 
     process_records
 }
