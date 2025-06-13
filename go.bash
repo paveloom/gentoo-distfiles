@@ -5,6 +5,7 @@ ROOT="$(dirname "$(realpath "$0")")"
 declare log_prefix=""
 
 declare option_debug_enabled=false
+declare option_package_name=""
 declare option_publish_enabled=false
 
 log()
@@ -54,21 +55,24 @@ function handle_args()
         case "$arg" in
         "--debug") set -- "$@" '-d' ;;
         "--help") set -- "$@" '-h' ;;
+        "--name") set -- "$@" '-n' ;;
         "--publish") set -- "$@" '-p' ;;
         *) set -- "$@" "$arg" ;;
         esac
     done
 
-    while getopts ":dhp" opt; do
+    while getopts ":dhn:p" opt; do
         case $opt in
         d) option_debug_enabled=true ;;
         h)
             echo "$0 usage:"
             echo "    -d, --debug   Enable debug messages"
             echo "    -h, --help    Show the usage message"
+            echo "    -n, --name    Build the package with this name"
             echo "    -p, --publish Publish the packages"
             exit 0
             ;;
+        n) option_package_name="$OPTARG" ;;
         p) option_publish_enabled=true ;;
         *) warn "unknown option $OPTARG" ;;
         esac
@@ -467,7 +471,10 @@ process_records()
                 # shellcheck disable=SC2034
                 record[${header[$i]}]="${row[$i]}"
             done
-            process_record record packages
+
+            if [[ "$option_package_name" == "" || "$option_package_name" == "${record["name"]}" ]]; then
+                process_record record packages
+            fi
         done
     } <go.csv
 }
