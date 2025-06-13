@@ -150,7 +150,7 @@ get_packages()
 pack()
 {
     declare -n r=$1
-    declare -n t=$2
+    declare -n rev=$2
 
     local ret
 
@@ -163,7 +163,7 @@ pack()
     if ! ret=$(
         curl \
             --location --silent --show-error --fail-with-body \
-            "${t["tarball_url"]}" -o "source.tar.gz" 2>&1
+            "${rev["tarball_url"]}" -o "source.tar.gz" 2>&1
     ); then
         error "$ret"
         fatal "failed to fetch the tarball"
@@ -201,7 +201,7 @@ pack()
         find "${go_mod_cache_dir}/cache/download" -type f -name '*.zip' -delete
         ;;
     "vendor")
-        local vendor_dir="$temp_dir/$deps_dir_name/${r["name"]}-${t["version"]}/${r["path"]}/vendor"
+        local vendor_dir="$temp_dir/$deps_dir_name/${r["name"]}-${rev["version"]}/${r["path"]}/vendor"
         go mod vendor -o "$vendor_dir" &>/dev/null
         ;;
     *)
@@ -228,16 +228,16 @@ pack()
 
     cd "$ROOT" || fatal "failed to switch back to the root directory"
 
-    cp "$temp_dir/$deps_dir_name.tar.xz" "${r["name"]}-${t["version"]}-deps.tar.xz"
+    cp "$temp_dir/$deps_dir_name.tar.xz" "${r["name"]}-${rev["version"]}-deps.tar.xz"
 }
 
 publish()
 {
     declare -n r=$1
-    declare -n t=$2
+    declare -n rev=$2
 
-    local file="${r["name"]}-${t["version"]}-deps.tar.xz"
-    local url="https://gitlab.com/api/v4/projects/$GITLAB_PROJECT_ID/packages/generic/${r["name"]}/${t["version"]}/$file"
+    local file="${r["name"]}-${rev["version"]}-deps.tar.xz"
+    local url="https://gitlab.com/api/v4/projects/$GITLAB_PROJECT_ID/packages/generic/${r["name"]}/${rev["version"]}/$file"
 
     info "publishing the package..."
 
@@ -255,7 +255,7 @@ publish()
 get_latest_tag_github()
 {
     declare -n r=$1
-    declare -n t=$2
+    declare -n rev=$2
 
     local ret
 
@@ -298,8 +298,8 @@ get_latest_tag_github()
     fi
     tarball_url="$ret"
 
-    t["version"]="$version"
-    t["tarball_url"]="$tarball_url"
+    rev["version"]="$version"
+    rev["tarball_url"]="$tarball_url"
 }
 
 get_latest_tag()
@@ -308,7 +308,104 @@ get_latest_tag()
 
     case ${r["forge"]} in
     "github")
-        get_latest_tag_github record tag
+        get_latest_tag_github record revision
+        ;;
+    *)
+        warn "unknown forge ${r["forge"]}"
+        return 1
+        ;;
+    esac
+}
+
+get_latest_commit_forgejo()
+{
+    declare -n r=$1
+    declare -n rev=$2
+
+    local ret
+
+    info "querying the latest commit..."
+
+    local commits
+    if ! ret=$(
+        curl \
+            --silent --show-error --fail-with-body \
+            "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/commits?limit=1" 2>$1
+    ); then
+        error "$ret"
+        fatal "failed to get the commits"
+    fi
+    commits="$ret"
+
+    local latest_commit
+    if ! ret="$(jq '.[0]' <<<"$commits" 2>&1)"; then
+        error "$ret"
+        fatal "failed to parse the commits"
+    fi
+    latest_commit="$ret"
+
+    local latest_commit_sha
+    if ! ret="$(jq -r '.["sha"]' <<<"$latest_commit" 2>&1)"; then
+        error "$ret"
+        fatal "failed to parse the SHA of the latest commit"
+    fi
+    latest_commit_sha="$ret"
+
+    local latest_commit_date
+    if ! ret="$(jq -r '.["created"]' <<<"$latest_commit" 2>&1)"; then
+        error "$ret"
+        fatal "failed to parse the created date of the latest commit"
+    fi
+    latest_commit_date="$ret"
+
+    latest_commit_tarball_url="https://${r["host"]}/${r["owner"]}/${r["repo"]}/archive/${latest_commit_sha}.tar.gz"
+    latest_commit_date_parsed="$(date "+%Y%m%d" -d "${latest_commit_date}")"
+
+    info "querying the latest tag..."
+
+    local tags
+    if ! ret=$(
+        curl \
+            --silent --show-error --fail-with-body \
+            "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1" 2>$1
+    ); then
+        error "$ret"
+        fatal "failed to get the tags"
+    fi
+    tags="$ret"
+
+    local latest_tag
+    if ! ret="$(jq '.[0]' <<<"$tags" 2>&1)"; then
+        error "$ret"
+        fatal "failed to parse the tags"
+    fi
+    latest_tag="$ret"
+
+    local version
+    if [[ ! "$latest_tag" == "null" ]]; then
+        local latest_tag_name
+        if ! ret="$(jq -r '.["name"]' <<<"$latest_tag" 2>&1)"; then
+            error "$ret"
+            fatal "failed to parse the name of the latest tag"
+        fi
+        latest_tag_name="$ret"
+
+        version="${latest_tag_name}_pre${latest_commit_date_parsed}"
+    else
+        version="0_pre${latest_commit_date_parsed}"
+    fi
+
+    rev["version"]="$version"
+    rev["tarball_url"]="$latest_commit_tarball_url"
+}
+
+get_latest_commit()
+{
+    declare -n r=$1
+
+    case ${r["forge"]} in
+    "forgejo")
+        get_latest_commit_forgejo record revision
         ;;
     *)
         warn "unknown forge ${r["forge"]}"
@@ -327,27 +424,35 @@ process_record()
 
     info "url: https://${r["host"]}/${r["owner"]}/${r["repo"]}"
 
-    declare -A tag
-    if ! get_latest_tag record tag; then
-        warn "failed to get the tag"
-        return
+    declare -A revision
+
+    if [[ "${r["live"]}" == "true" ]]; then
+        if ! get_latest_commit record revision; then
+            warn "failed to form a revision from the latest commit"
+            return
+        fi
+    else
+        if ! get_latest_tag record revision; then
+            warn "failed to form a revision from the latest tag"
+            return
+        fi
     fi
 
-    info "version: ${tag["version"]}"
-    info "tarball_url: ${tag["tarball_url"]}"
+    info "version: ${revision["version"]}"
+    info "tarball_url: ${revision["tarball_url"]}"
 
     read -r -a registry_versions <<<"${p["${r["name"]}"]}"
     for registry_version in "${registry_versions[@]}"; do
-        if [[ "${tag["version"]}" == "$registry_version" ]]; then
+        if [[ "${revision["version"]}" == "$registry_version" ]]; then
             info "the latest version is already in the registry; skipping"
             return
         fi
     done
 
-    pack record tag
+    pack record revision
 
     if $option_publish_enabled; then
-        publish record tag
+        publish record revision
     fi
 }
 
