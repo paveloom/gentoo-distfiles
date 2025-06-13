@@ -3,7 +3,8 @@
 ROOT="$(dirname "$(realpath "$0")")"
 
 declare log_prefix=""
-declare log_debug_enabled=false
+
+declare option_debug_enabled=false
 
 log()
 {
@@ -19,7 +20,7 @@ log()
 
 debug()
 {
-    if $log_debug_enabled; then
+    if $option_debug_enabled; then
         log "[DEBUG]" "$*"
     fi
 }
@@ -58,7 +59,7 @@ function handle_args()
 
     while getopts ":dh" opt; do
         case $opt in
-        d) log_debug_enabled=true ;;
+        d) option_debug_enabled=true ;;
         h)
             echo "$0 usage:"
             echo "    -d, --debug Enable debug messages"
