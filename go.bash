@@ -334,7 +334,7 @@ get_latest_commit_forgejo()
     if ! ret=$(
         curl \
             --silent --show-error --fail-with-body \
-            "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/commits?limit=1" 2>$1
+            "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/commits?limit=1" 2>&1
     ); then
         error "$ret"
         fatal "failed to get the commits"
@@ -371,7 +371,7 @@ get_latest_commit_forgejo()
     if ! ret=$(
         curl \
             --silent --show-error --fail-with-body \
-            "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1" 2>$1
+            "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1" 2>&1
     ); then
         error "$ret"
         fatal "failed to get the tags"
