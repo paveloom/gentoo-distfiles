@@ -209,7 +209,16 @@ pack()
         find "${go_mod_cache_dir}/cache/download" -type f -name '*.zip' -delete
         ;;
     "vendor")
-        local vendor_dir="$temp_dir/$deps_dir_name/${r["name"]}-${rev["version"]}/${r["path"]}/vendor"
+        local vendor_dir
+        case ${r["forge"]} in
+        "forgejo")
+            vendor_dir="$temp_dir/$deps_dir_name/${r["name"]}/${r["path"]}/vendor"
+            ;;
+        *)
+            vendor_dir="$temp_dir/$deps_dir_name/${r["name"]}-${rev["version"]}/${r["path"]}/vendor"
+            ;;
+        esac
+
         go mod vendor -o "$vendor_dir" &>/dev/null
         ;;
     *)
