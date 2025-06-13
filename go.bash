@@ -253,7 +253,7 @@ publish()
     fi
 }
 
-get_tag_github()
+get_latest_tag_github()
 {
     declare -n r=$1
     declare -n t=$2
@@ -303,13 +303,13 @@ get_tag_github()
     t["tarball_url"]="$tarball_url"
 }
 
-get_tag()
+get_latest_tag()
 {
     declare -n r=$1
 
     case ${r["forge"]} in
     "github")
-        get_tag_github record tag
+        get_latest_tag_github record tag
         ;;
     *)
         warn "unknown forge ${r["forge"]}"
@@ -329,7 +329,7 @@ process_record()
     info "url: https://${r["host"]}/${r["owner"]}/${r["repo"]}"
 
     declare -A tag
-    if ! get_tag record tag; then
+    if ! get_latest_tag record tag; then
         warn "failed to get the tag"
         return
     fi
