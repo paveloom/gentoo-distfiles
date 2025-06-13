@@ -1,2 +1,3 @@
-name    forge  host       owner       repo    path        method
-nekoray github github.com Mahdi-zarei nekoray core/server vendor
+name                    forge   host       owner       repo                    path        method live
+ios-safari-remote-debug forgejo git.gay    besties     ios-safari-remote-debug .           vendor true
+nekoray                 github  github.com Mahdi-zarei nekoray                 core/server vendor false
