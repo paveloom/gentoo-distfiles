@@ -163,7 +163,6 @@ pack()
     if ! ret=$(
         curl \
             --location --silent --show-error --fail-with-body \
-            --header "Authorization: Bearer $GITHUB_TOKEN" \
             "${t["tarball_url"]}" -o "source.tar.gz" 2>&1
     ); then
         error "$ret"
