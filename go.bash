@@ -5,6 +5,7 @@ ROOT="$(dirname "$(realpath "$0")")"
 declare log_prefix=""
 
 declare option_debug_enabled=false
+declare option_publish_enabled=false
 
 log()
 {
@@ -53,19 +54,22 @@ function handle_args()
         case "$arg" in
         "--debug") set -- "$@" '-d' ;;
         "--help") set -- "$@" '-h' ;;
+        "--publish") set -- "$@" '-p' ;;
         *) set -- "$@" "$arg" ;;
         esac
     done
 
-    while getopts ":dh" opt; do
+    while getopts ":dhp" opt; do
         case $opt in
         d) option_debug_enabled=true ;;
         h)
             echo "$0 usage:"
-            echo "    -d, --debug Enable debug messages"
-            echo "    -h, --help  Show the usage message"
+            echo "    -d, --debug   Enable debug messages"
+            echo "    -h, --help    Show the usage message"
+            echo "    -p, --publish Publish the packages"
             exit 0
             ;;
+        p) option_publish_enabled=true ;;
         *) warn "unknown option $OPTARG" ;;
         esac
     done
@@ -342,7 +346,10 @@ process_record()
     done
 
     pack record tag
-    publish record tag
+
+    if $option_publish_enabled; then
+        publish record tag
+    fi
 }
 
 process_records()
