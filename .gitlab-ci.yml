@@ -12,4 +12,4 @@ vendor:
   before_script:
     - pacman -Syu --noconfirm go jq
   script:
-    - ./go.bash -p
+    - ./sync.bash -p

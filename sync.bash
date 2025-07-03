@@ -491,7 +491,7 @@ process_records()
                 process_record record packages
             fi
         done
-    } <go.csv
+    } <"${ROOT}/repos.csv"
 }
 
 main()
