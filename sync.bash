@@ -155,15 +155,9 @@ get_packages()
     } <<<"$name_version_pairs"
 }
 
-pack()
+fetch_deps()
 {
-    declare -n r=$1
-    declare -n rev=$2
-
-    local ret
-
-    temp_dir="$(mktemp -d)"
-    debug "temp_dir=$temp_dir"
+    local temp_dir="$1"
 
     cd "$temp_dir" || fatal "failed to switch to the temporary directory"
 
@@ -179,8 +173,17 @@ pack()
 
     mkdir source
     tar -x --strip-components 1 -C source -f source.tar.gz
+}
 
-    cd source || fatal "failed to switch to the source directory"
+download_deps_go()
+{
+    declare -n r=$1
+    declare -n rev=$2
+
+    local temp_dir="$3"
+    local deps_dir_name="$4"
+
+    cd "$temp_dir/source" || fatal "failed to switch to the source directory"
     cd "${r["path"]}" || fatal "failed to switch to the main module directory"
 
     if [[ ! -f go.mod ]]; then
@@ -188,8 +191,6 @@ pack()
     fi
 
     info "downloading the dependencies (\`go mod ${r["method"]}\`)..."
-
-    local deps_dir_name="deps"
 
     case "${r["method"]}" in
     "download")
@@ -225,6 +226,28 @@ pack()
         fatal "unknown method ${r["method"]}"
         ;;
     esac
+}
+
+download_deps()
+{
+    declare -n r=$1
+    declare -n rev=$2
+
+    local temp_dir="$3"
+    local deps_dir_name="$4"
+
+    case "${r["lang"]}" in
+    "go") download_deps_go record revision "$temp_dir" "$deps_dir_name" ;;
+    *)
+        fatal "unknown language ${r["lang"]}"
+        ;;
+    esac
+}
+
+compress_deps()
+{
+    local temp_dir="$1"
+    local deps_dir_name="$2"
 
     info "compressing the dependencies..."
 
@@ -244,6 +267,25 @@ pack()
     fi
 
     cd "$ROOT" || fatal "failed to switch back to the root directory"
+}
+
+pack()
+{
+    declare -n r=$1
+    declare -n rev=$2
+
+    local ret
+
+    temp_dir="$(mktemp -d)"
+    debug "temp_dir=$temp_dir"
+
+    fetch_deps "$temp_dir"
+
+    local deps_dir_name="deps"
+
+    download_deps record revision "$temp_dir" "$deps_dir_name"
+
+    compress_deps "$temp_dir" "$deps_dir_name"
 
     cp "$temp_dir/$deps_dir_name.tar.xz" "${r["name"]}-${rev["version"]}-deps.tar.xz"
 }
