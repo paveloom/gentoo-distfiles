@@ -414,6 +414,8 @@ get_latest_tag()
     fi
     version="$ret"
 
+    version=${version#v}
+
     local tarball_url
     if ! ret="$(jq -r '.["tarball_url"]' <<<"$latest_tag" 2>&1)"; then
         error "$ret"
@@ -532,7 +534,7 @@ get_latest_commit()
         fi
         latest_tag_name="$ret"
 
-        version="${latest_tag_name}_pre${latest_commit_date_parsed}"
+        version="${latest_tag_name#v}_pre${latest_commit_date_parsed}"
     else
         version="0_pre${latest_commit_date_parsed}"
     fi
