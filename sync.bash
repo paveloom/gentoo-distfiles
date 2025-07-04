@@ -376,20 +376,37 @@ get_latest_tag()
     esac
 }
 
-get_latest_commit_forgejo()
+get_latest_commit()
 {
     declare -n r=$1
     declare -n rev=$2
 
     local ret
 
+    case ${r["forge"]} in
+    "forgejo" | "github") ;;
+    *)
+        warn "unknown forge ${r["forge"]}"
+        return 1
+        ;;
+    esac
+
     info "querying the latest commit..."
 
     local commits
     if ! ret=$(
-        curl \
-            --silent --show-error --fail-with-body \
-            "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/commits?limit=1" 2>&1
+        case "${r["forge"]}" in
+        "forgejo")
+            curl \
+                --silent --show-error --fail-with-body \
+                "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/commits?limit=1" 2>&1
+            ;;
+        "github")
+            curl \
+                --silent --show-error --fail-with-body \
+                --header "Authorization: Bearer $GITHUB_TOKEN" \
+                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/commits?per_page=1" 2>&1
+        esac
     ); then
         error "$ret"
         fatal "failed to get the commits"
@@ -410,8 +427,14 @@ get_latest_commit_forgejo()
     fi
     latest_commit_sha="$ret"
 
+    local latest_commit_date_property
+    case ${r["forge"]} in
+    "forgejo") latest_commit_date_property=".created" ;;
+    "github") latest_commit_date_property=".commit.committer.date" ;;
+    esac
+
     local latest_commit_date
-    if ! ret="$(jq -r '.["created"]' <<<"$latest_commit" 2>&1)"; then
+    if ! ret="$(jq -r "$latest_commit_date_property" <<<"$latest_commit" 2>&1)"; then
         error "$ret"
         fatal "failed to parse the created date of the latest commit"
     fi
@@ -424,9 +447,19 @@ get_latest_commit_forgejo()
 
     local tags
     if ! ret=$(
-        curl \
-            --silent --show-error --fail-with-body \
-            "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1" 2>&1
+        case "${r["forge"]}" in
+        "forgejo")
+            curl \
+                --silent --show-error --fail-with-body \
+                "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1" 2>&1
+            ;;
+        "github")
+            curl \
+                --silent --show-error --fail-with-body \
+                --header "Authorization: Bearer $GITHUB_TOKEN" \
+                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=1" 2>&1
+            ;;
+        esac
     ); then
         error "$ret"
         fatal "failed to get the tags"
@@ -456,21 +489,6 @@ get_latest_commit_forgejo()
 
     rev["version"]="$version"
     rev["tarball_url"]="$latest_commit_tarball_url"
-}
-
-get_latest_commit()
-{
-    declare -n r=$1
-
-    case ${r["forge"]} in
-    "forgejo")
-        get_latest_commit_forgejo record revision
-        ;;
-    *)
-        warn "unknown forge ${r["forge"]}"
-        return 1
-        ;;
-    esac
 }
 
 process_record()
