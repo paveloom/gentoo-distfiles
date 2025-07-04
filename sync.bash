@@ -175,6 +175,25 @@ fetch_deps()
     tar -x --strip-components 1 -C source -f source.tar.gz
 }
 
+prepare_deps()
+{
+    declare -n r=$1
+
+    local temp_dir="$2"
+
+    cd "$temp_dir/source" || fatal "failed to switch to the source directory"
+
+    local prepare_script_path="$ROOT/repos/${r["name"]}/prepare.bash"
+
+    if [[ ! -x "$prepare_script_path" ]]; then
+        return
+    fi
+
+    info "preparing the source code..."
+
+    "$prepare_script_path"
+}
+
 download_deps_go()
 {
     declare -n r=$1
@@ -315,6 +334,8 @@ pack()
     debug "temp_dir=$temp_dir"
 
     fetch_deps "$temp_dir"
+
+    prepare_deps record "$temp_dir"
 
     local deps_dir_name="deps"
 

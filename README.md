@@ -24,6 +24,8 @@ Required binaries:
 - `go`
 - `jq`
 
+Additional binaries can be required by prepare scripts (see [./prepare](./prepare)).
+
 Here's an example of running a script:
 
 ```bash
