@@ -372,6 +372,7 @@ get_latest_tag()
 get_latest_commit()
 {
     declare -n r=$1
+    # shellcheck disable=SC2178
     declare -n rev=$2
 
     local ret
