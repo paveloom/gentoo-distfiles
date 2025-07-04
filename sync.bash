@@ -311,12 +311,20 @@ publish()
     fi
 }
 
-get_latest_tag_github()
+get_latest_tag()
 {
     declare -n r=$1
     declare -n rev=$2
 
     local ret
+
+    case ${r["forge"]} in
+    "github") ;;
+    *)
+        warn "unknown forge ${r["forge"]}"
+        return 1
+        ;;
+    esac
 
     info "querying the latest tag..."
 
@@ -359,21 +367,6 @@ get_latest_tag_github()
 
     rev["version"]="$version"
     rev["tarball_url"]="$tarball_url"
-}
-
-get_latest_tag()
-{
-    declare -n r=$1
-
-    case ${r["forge"]} in
-    "github")
-        get_latest_tag_github record revision
-        ;;
-    *)
-        warn "unknown forge ${r["forge"]}"
-        return 1
-        ;;
-    esac
 }
 
 get_latest_commit()
