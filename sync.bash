@@ -268,7 +268,7 @@ download_deps_rust()
 
     case "${r["method"]}" in
     "vendor")
-        local vendor_dir="$temp_dir/$deps_dir_name/${r["name"]}/${r["path"]}/vendor"
+        local vendor_dir="$temp_dir/$deps_dir_name/cargo_home/gentoo"
 
         if ! ret=$(cargo vendor "$vendor_dir" 2>&1);  then
             error "$ret"
