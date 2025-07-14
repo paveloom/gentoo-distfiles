@@ -49,6 +49,12 @@ fatal()
     exit 1
 }
 
+curl() {
+    command curl \
+        --location --silent --show-error --fail-with-body \
+        "$@" 2>&1
+}
+
 function handle_args()
 {
     for arg in "$@"; do
@@ -128,9 +134,9 @@ get_packages()
 
     local metadata
     if ! ret=$(
-        curl --location --silent --show-error --fail-with-body \
+        curl \
             --header "$GITLAB_AUTH_HEADER" \
-            "https://gitlab.com/api/v4/projects/$GITLAB_PROJECT_ID/packages" 2>&1
+            "https://gitlab.com/api/v4/projects/$GITLAB_PROJECT_ID/packages"
     ); then
         error "$ret"
         fatal "failed to fetch the packages metadata"
@@ -163,9 +169,7 @@ fetch_deps()
 
     info "fetching the tarball..."
     if ! ret=$(
-        curl \
-            --location --silent --show-error --fail-with-body \
-            "${rev["tarball_url"]}" -o "source.tar.gz" 2>&1
+        curl "${rev["tarball_url"]}" -o "source.tar.gz"
     ); then
         error "$ret"
         fatal "failed to fetch the tarball"
@@ -358,9 +362,8 @@ publish()
 
     if ! ret=$(
         curl \
-            --location --silent --show-error --fail-with-body \
             --header "$GITLAB_AUTH_HEADER" \
-            --upload-file "$file" "$url" 2>&1
+            --upload-file "$file" "$url"
     ); then
         error "$ret"
         fatal "failed to publish the package"
@@ -387,9 +390,8 @@ get_latest_tag()
     local tags
     if ! ret=$(
         curl \
-            --silent --show-error --fail-with-body \
             --header "Authorization: Bearer $GITHUB_TOKEN" \
-            "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags" 2>&1
+            "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags"
     ); then
         error "$ret"
         fatal "failed to get the tags"
@@ -449,15 +451,12 @@ get_latest_commit()
     if ! ret=$(
         case "${r["forge"]}" in
         "forgejo")
-            curl \
-                --silent --show-error --fail-with-body \
-                "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/commits?limit=1" 2>&1
+            curl "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/commits?limit=1"
             ;;
         "github")
             curl \
-                --silent --show-error --fail-with-body \
                 --header "Authorization: Bearer $GITHUB_TOKEN" \
-                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/commits?per_page=1" 2>&1
+                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/commits?per_page=1"
         esac
     ); then
         error "$ret"
@@ -501,15 +500,12 @@ get_latest_commit()
     if ! ret=$(
         case "${r["forge"]}" in
         "forgejo")
-            curl \
-                --silent --show-error --fail-with-body \
-                "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1" 2>&1
+            curl "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1"
             ;;
         "github")
             curl \
-                --silent --show-error --fail-with-body \
                 --header "Authorization: Bearer $GITHUB_TOKEN" \
-                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=1" 2>&1
+                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=1"
             ;;
         esac
     ); then
