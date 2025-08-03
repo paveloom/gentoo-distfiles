@@ -426,42 +426,50 @@ get_latest_tag()
         latest_tag="$ret"
         ;;
     "github")
-        local latest_committer_date_unix=0
+        if [[ "${r["sort_tags"]}" == "true" ]]; then
+            local latest_committer_date_unix=0
 
-        readarray -t tags_array < <(jq --compact-output '.[]' <<<"$tags")
-        for tag in "${tags_array[@]}"; do
-            local commit_sha
-            if ! ret=$(jq -r '.commit.sha' <<<"$tag"); then
-                error $ret
-                fatal "failed to parse the commit hash"
-            fi
-            commit_sha="$ret"
+            readarray -t tags_array < <(jq --compact-output '.[]' <<<"$tags")
+            for tag in "${tags_array[@]}"; do
+                local commit_sha
+                if ! ret=$(jq -r '.commit.sha' <<<"$tag"); then
+                    error $ret
+                    fatal "failed to parse the commit hash"
+                fi
+                commit_sha="$ret"
 
-            local commit
-            if ! ret=$(
-                curl \
-                "${CURL_GITHUB_HEADERS[@]}" \
-                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/git/commits/${commit_sha}"
-            ); then
+                local commit
+                if ! ret=$(
+                    curl \
+                    "${CURL_GITHUB_HEADERS[@]}" \
+                    "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/git/commits/${commit_sha}"
+                ); then
+                    error "$ret"
+                    fatal "failed to get the commit object"
+                fi
+                commit="$ret"
+
+                local committer_date
+                if ! ret=$(jq -r '.committer.date' <<<"$commit"); then
+                    error "$ret"
+                    fatal "failed to parse the committer date"
+                fi
+                committer_date="$ret"
+
+                committer_date_unix=$(date -d "$committer_date" +%s)
+
+                if [[ "$committer_date_unix" -gt "$latest_committer_date_unix" ]]; then
+                    latest_committer_date_unix="$committer_date_unix"
+                    latest_tag="$tag"
+                fi
+            done
+        else
+            if ! ret="$(jq '.[0]' <<<"$tags" 2>&1)"; then
                 error "$ret"
-                fatal "failed to get the commit object"
+                fatal "failed to parse the tags"
             fi
-            commit="$ret"
-
-            local committer_date
-            if ! ret=$(jq -r '.committer.date' <<<"$commit"); then
-                error "$ret"
-                fatal "failed to parse the committer date"
-            fi
-            committer_date="$ret"
-
-            committer_date_unix=$(date -d "$committer_date" +%s)
-
-            if [[ "$committer_date_unix" -gt "$latest_committer_date_unix" ]]; then
-                latest_committer_date_unix="$committer_date_unix"
-                latest_tag="$tag"
-            fi
-        done
+            latest_tag="$ret"
+        fi
         ;;
     esac
 
