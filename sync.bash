@@ -389,7 +389,7 @@ get_latest_tag()
     local ret
 
     case ${r["forge"]} in
-    "github") ;;
+    "forgejo" | "github") ;;
     *)
         warn "unknown forge ${r["forge"]}"
         return 1
@@ -400,9 +400,16 @@ get_latest_tag()
 
     local tags
     if ! ret=$(
-        curl \
-            "${CURL_GITHUB_HEADERS[@]}" \
-            "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags"
+        case "${r["forge"]}" in
+        "forgejo")
+            curl "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1"
+            ;;
+        "github")
+            curl \
+                "${CURL_GITHUB_HEADERS[@]}" \
+                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=1"
+            ;;
+        esac
     ); then
         error "$ret"
         fatal "failed to get the tags"
@@ -416,16 +423,17 @@ get_latest_tag()
     fi
     latest_tag="$ret"
 
-    if [[ "$latest_tag" == "null" ]]; then
-        fatal "there are no tags"
-    fi
-
     local version
-    if ! ret="$(jq -r '.["name"]' <<<"$latest_tag" 2>&1)"; then
-        error "$ret"
-        fatal "failed to parse the version of the latest tag"
+    if [[ "$latest_tag" == "null" ]]; then
+        warn "there are no tags"
+        version="0"
+    else
+        if ! ret="$(jq -r '.["name"]' <<<"$latest_tag" 2>&1)"; then
+            error "$ret"
+            fatal "failed to parse the version of the latest tag"
+        fi
+        version="$ret"
     fi
-    version="$ret"
 
     version=${version#v}
 
@@ -505,46 +513,9 @@ get_latest_commit()
     latest_commit_tarball_url="https://${r["host"]}/${r["owner"]}/${r["repo"]}/archive/${latest_commit_sha}.tar.gz"
     latest_commit_date_parsed="$(date "+%Y%m%d" -d "${latest_commit_date}")"
 
-    info "querying the latest tag..."
+    get_latest_tag record revision
 
-    local tags
-    if ! ret=$(
-        case "${r["forge"]}" in
-        "forgejo")
-            curl "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1"
-            ;;
-        "github")
-            curl \
-                "${CURL_GITHUB_HEADERS[@]}" \
-                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=1"
-            ;;
-        esac
-    ); then
-        error "$ret"
-        fatal "failed to get the tags"
-    fi
-    tags="$ret"
-
-    local latest_tag
-    if ! ret="$(jq '.[0]' <<<"$tags" 2>&1)"; then
-        error "$ret"
-        fatal "failed to parse the tags"
-    fi
-    latest_tag="$ret"
-
-    local version
-    if [[ ! "$latest_tag" == "null" ]]; then
-        local latest_tag_name
-        if ! ret="$(jq -r '.["name"]' <<<"$latest_tag" 2>&1)"; then
-            error "$ret"
-            fatal "failed to parse the name of the latest tag"
-        fi
-        latest_tag_name="$ret"
-
-        version="${latest_tag_name#v}_pre${latest_commit_date_parsed}"
-    else
-        version="0_pre${latest_commit_date_parsed}"
-    fi
+    local version="${rev["version"]#v}_pre${latest_commit_date_parsed}"
 
     rev["version"]="$version"
     rev["tarball_url"]="$latest_commit_tarball_url"
