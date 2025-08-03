@@ -55,6 +55,11 @@ curl() {
         "$@" 2>&1
 }
 
+CURL_GITHUB_HEADERS=(
+    --header "Authorization: Bearer $GITHUB_TOKEN"
+    --header "X-GitHub-Api-Version:2022-11-28"
+)
+
 function handle_args()
 {
     for arg in "$@"; do
@@ -390,7 +395,7 @@ get_latest_tag()
     local tags
     if ! ret=$(
         curl \
-            --header "Authorization: Bearer $GITHUB_TOKEN" \
+            "${CURL_GITHUB_HEADERS[@]}" \
             "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags"
     ); then
         error "$ret"
@@ -455,7 +460,7 @@ get_latest_commit()
             ;;
         "github")
             curl \
-                --header "Authorization: Bearer $GITHUB_TOKEN" \
+                "${CURL_GITHUB_HEADERS[@]}" \
                 "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/commits?per_page=1"
         esac
     ); then
@@ -504,7 +509,7 @@ get_latest_commit()
             ;;
         "github")
             curl \
-                --header "Authorization: Bearer $GITHUB_TOKEN" \
+                "${CURL_GITHUB_HEADERS[@]}" \
                 "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=1"
             ;;
         esac
