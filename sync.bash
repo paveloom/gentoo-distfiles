@@ -211,6 +211,8 @@ download_deps_go()
     local temp_dir="$3"
     local deps_dir_name="$4"
 
+    local ret
+
     cd "$temp_dir/source" || fatal "failed to switch to the source directory"
     cd "${r["path"]}" || fatal "failed to switch to the main module directory"
 
@@ -248,7 +250,10 @@ download_deps_go()
             ;;
         esac
 
-        go mod vendor -o "$vendor_dir" &>/dev/null
+        if ! ret=$(go mod vendor -o "$vendor_dir" 2>&1 1>/dev/null);  then
+            error "$ret"
+            fatal "failed to download the dependencies"
+        fi
         ;;
     *)
         fatal "unknown method ${r["method"]}"
