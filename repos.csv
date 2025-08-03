@@ -1,4 +1,5 @@
 name                    forge   host       owner       repo                    path        lang method live  sort_tags
 ios-safari-remote-debug forgejo git.gay    besties     ios-safari-remote-debug .           go   vendor true      false
+protorpc                github  github.com chai2010    protorpc                .           go   vendor false     false
 Throne                  github  github.com throneproj  Throne                  core/server go   vendor false      true
 webdav-server-rs        github  github.com miquels     webdav-server-rs        .           rust vendor true      false
