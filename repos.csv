@@ -1,4 +1,4 @@
 name                    forge   host       owner       repo                    path        lang method live
 ios-safari-remote-debug forgejo git.gay    besties     ios-safari-remote-debug .           go   vendor true
-nekoray                 github  github.com Mahdi-zarei nekoray                 core/server go   vendor false
+Throne                  github  github.com throneproj  Throne                  core/server go   vendor false
 webdav-server-rs        github  github.com miquels     webdav-server-rs        .           rust vendor true
