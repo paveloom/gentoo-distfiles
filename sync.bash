@@ -407,7 +407,7 @@ get_latest_tag()
         "github")
             curl \
                 "${CURL_GITHUB_HEADERS[@]}" \
-                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=1"
+                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=100"
             ;;
         esac
     ); then
@@ -417,14 +417,56 @@ get_latest_tag()
     tags="$ret"
 
     local latest_tag
-    if ! ret="$(jq '.[0]' <<<"$tags" 2>&1)"; then
-        error "$ret"
-        fatal "failed to parse the tags"
-    fi
-    latest_tag="$ret"
+    case ${r["forge"]} in
+    "forgejo")
+        if ! ret="$(jq '.[0]' <<<"$tags" 2>&1)"; then
+            error "$ret"
+            fatal "failed to parse the tags"
+        fi
+        latest_tag="$ret"
+        ;;
+    "github")
+        local latest_committer_date_unix=0
+
+        readarray -t tags_array < <(jq --compact-output '.[]' <<<"$tags")
+        for tag in "${tags_array[@]}"; do
+            local commit_sha
+            if ! ret=$(jq -r '.commit.sha' <<<"$tag"); then
+                error $ret
+                fatal "failed to parse the commit hash"
+            fi
+            commit_sha="$ret"
+
+            local commit
+            if ! ret=$(
+                curl \
+                "${CURL_GITHUB_HEADERS[@]}" \
+                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/git/commits/${commit_sha}"
+            ); then
+                error "$ret"
+                fatal "failed to get the commit object"
+            fi
+            commit="$ret"
+
+            local committer_date
+            if ! ret=$(jq -r '.committer.date' <<<"$commit"); then
+                error "$ret"
+                fatal "failed to parse the committer date"
+            fi
+            committer_date="$ret"
+
+            committer_date_unix=$(date -d "$committer_date" +%s)
+
+            if [[ "$committer_date_unix" -gt "$latest_committer_date_unix" ]]; then
+                latest_committer_date_unix="$committer_date_unix"
+                latest_tag="$tag"
+            fi
+        done
+        ;;
+    esac
 
     local version
-    if [[ "$latest_tag" == "null" ]]; then
+    if [[ "$latest_tag" == "null" || "$latest_tag" = "" ]]; then
         warn "there are no tags"
         version="0"
     else
