@@ -1,0 +1,17 @@
+From: Pavel Sobolev <contact@paveloom.dev>
+Subject: [PATCH] Add a fake dependency on `github.com/chai2010/protorpc`.
+
+Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
+
+--- a/core/server/main.go
++++ b/core/server/main.go
+@@ -16,6 +16,8 @@ import (
+ 
+ 	_ "Core/internal/distro/all"
+ 	C "github.com/sagernet/sing-box/constant"
++
++	_ "github.com/chai2010/protorpc"
+ )
+ 
+ func RunCore() {
+
