@@ -1,4 +1,5 @@
 name                    forge   host       owner       repo                    path        lang method live  sort_tags
+addlicense              github  github.com google      addlicense              .           go   vendor false false
 ios-safari-remote-debug forgejo git.gay    besties     ios-safari-remote-debug .           go   vendor true  false
 mousai                  github  github.com SeaDve      Mousai                  .           rust vendor false false
 protorpc                github  github.com chai2010    protorpc                .           go   vendor false false
