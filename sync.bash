@@ -389,7 +389,7 @@ get_latest_tag()
     local ret
 
     case ${r["forge"]} in
-    "forgejo" | "github") ;;
+    "forgejo" | "github" | "gitlab") ;;
     *)
         warn "unknown forge ${r["forge"]}"
         return 1
@@ -409,6 +409,8 @@ get_latest_tag()
                 "${CURL_GITHUB_HEADERS[@]}" \
                 "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=100"
             ;;
+        "gitlab")
+            curl "https://${r["host"]}/api/v4/projects/${r["owner"]}%2F${r["repo"]}/repository/tags"
         esac
     ); then
         error "$ret"
@@ -418,7 +420,7 @@ get_latest_tag()
 
     local latest_tag
     case ${r["forge"]} in
-    "forgejo")
+    "forgejo" | "gitlab")
         if ! ret="$(jq '.[0]' <<<"$tags" 2>&1)"; then
             error "$ret"
             fatal "failed to parse the tags"
@@ -488,11 +490,17 @@ get_latest_tag()
     version=${version#v}
 
     local tarball_url
-    if ! ret="$(jq -r '.["tarball_url"]' <<<"$latest_tag" 2>&1)"; then
-        error "$ret"
-        fatal "failed to parse the tarball URL of the latest tag"
-    fi
-    tarball_url="$ret"
+    case ${r["forge"]} in
+    "forgejo" | "github")
+        if ! ret="$(jq -r '.["tarball_url"]' <<<"$latest_tag" 2>&1)"; then
+            error "$ret"
+            fatal "failed to parse the tarball URL of the latest tag"
+        fi
+        tarball_url="$ret"
+        ;;
+    "gitlab")
+        tarball_url="https://${r["host"]}/${r["owner"]}/${r["repo"]}/-/archive/${version}/${r["repo"]}-${version}.tar.bz2"
+    esac
 
     rev["version"]="$version"
     rev["tarball_url"]="$tarball_url"
