@@ -313,6 +313,26 @@ download_deps()
     esac
 }
 
+fix_up_deps()
+{
+    declare -n r=$1
+
+    local temp_dir="$2"
+    local deps_dir_name="$3"
+
+    cd "$temp_dir/$deps_dir_name" || fatal "failed to switch to the deps directory"
+
+    local fixup_script_path="$ROOT/repos/${r["name"]}/fixup.bash"
+
+    if [[ ! -x "$fixup_script_path" ]]; then
+        return
+    fi
+
+    info "fixing up the deps..."
+
+    "$fixup_script_path"
+}
+
 compress_deps()
 {
     local temp_dir="$1"
@@ -349,13 +369,12 @@ pack()
     debug "temp_dir=$temp_dir"
 
     fetch_deps "$temp_dir"
-
     prepare_deps record "$temp_dir"
 
     local deps_dir_name="deps"
 
     download_deps record revision "$temp_dir" "$deps_dir_name"
-
+    fix_up_deps record "$temp_dir" "$deps_dir_name"
     compress_deps "$temp_dir" "$deps_dir_name"
 
     cp "$temp_dir/$deps_dir_name.tar.xz" "${r["name"]}-${rev["version"]}-deps.tar.xz"
