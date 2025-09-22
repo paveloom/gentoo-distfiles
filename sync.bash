@@ -167,7 +167,7 @@ get_packages()
     } <<<"$name_version_pairs"
 }
 
-fetch_deps()
+fetch_source()
 {
     local temp_dir="$1"
 
@@ -185,7 +185,7 @@ fetch_deps()
     tar -x --strip-components 1 -C source -f source.tar.gz
 }
 
-prepare_deps()
+prepare_source()
 {
     declare -n r=$1
 
@@ -368,8 +368,8 @@ pack()
     temp_dir="$(mktemp -d)"
     debug "temp_dir=$temp_dir"
 
-    fetch_deps "$temp_dir"
-    prepare_deps record "$temp_dir"
+    fetch_source "$temp_dir"
+    prepare_source record "$temp_dir"
 
     local deps_dir_name="deps"
 
