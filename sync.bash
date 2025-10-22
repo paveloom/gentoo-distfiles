@@ -49,7 +49,8 @@ fatal()
     exit 1
 }
 
-curl() {
+curl()
+{
     command curl \
         --location --silent --show-error --fail-with-body \
         "$@" 2>&1
@@ -256,7 +257,7 @@ download_deps_go()
             ;;
         esac
 
-        if ! ret=$(go mod vendor -o "$vendor_dir" 2>&1 1>/dev/null);  then
+        if ! ret=$(go mod vendor -o "$vendor_dir" 2>&1 1>/dev/null); then
             error "$ret"
             fatal "failed to download the dependencies"
         fi
@@ -290,7 +291,7 @@ download_deps_rust()
     "vendor")
         local vendor_dir="$temp_dir/$deps_dir_name/cargo_home/gentoo"
 
-        if ! ret=$(cargo vendor "$vendor_dir" 2>&1);  then
+        if ! ret=$(cargo vendor "$vendor_dir" 2>&1); then
             error "$ret"
             fatal "failed to download the dependencies"
         fi
@@ -423,20 +424,23 @@ get_latest_tag()
     info "querying the latest tag..."
 
     local tags
-    if ! ret=$(
-        case "${r["forge"]}" in
-        "forgejo")
-            curl "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1"
-            ;;
-        "github")
-            curl \
-                "${CURL_GITHUB_HEADERS[@]}" \
-                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=100"
-            ;;
-        "gitlab")
-            curl "https://${r["host"]}/api/v4/projects/${r["owner"]}%2F${r["repo"]}/repository/tags"
-        esac
-    ); then
+    if
+        ! ret=$(
+            case "${r["forge"]}" in
+            "forgejo")
+                curl "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/tags?limit=1"
+                ;;
+            "github")
+                curl \
+                    "${CURL_GITHUB_HEADERS[@]}" \
+                    "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/tags?per_page=100"
+                ;;
+            "gitlab")
+                curl "https://${r["host"]}/api/v4/projects/${r["owner"]}%2F${r["repo"]}/repository/tags"
+                ;;
+            esac
+        )
+    then
         error "$ret"
         fatal "failed to get the tags"
     fi
@@ -467,8 +471,8 @@ get_latest_tag()
                 local commit
                 if ! ret=$(
                     curl \
-                    "${CURL_GITHUB_HEADERS[@]}" \
-                    "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/git/commits/${commit_sha}"
+                        "${CURL_GITHUB_HEADERS[@]}" \
+                        "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/git/commits/${commit_sha}"
                 ); then
                     error "$ret"
                     fatal "failed to get the commit object"
@@ -524,6 +528,7 @@ get_latest_tag()
         ;;
     "gitlab")
         tarball_url="https://${r["host"]}/${r["owner"]}/${r["repo"]}/-/archive/${version}/${r["repo"]}-${version}.tar.bz2"
+        ;;
     esac
 
     rev["version"]="$version"
@@ -549,17 +554,20 @@ get_latest_commit()
     info "querying the latest commit..."
 
     local commits
-    if ! ret=$(
-        case "${r["forge"]}" in
-        "forgejo")
-            curl "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/commits?limit=1"
-            ;;
-        "github")
-            curl \
-                "${CURL_GITHUB_HEADERS[@]}" \
-                "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/commits?per_page=1"
-        esac
-    ); then
+    if
+        ! ret=$(
+            case "${r["forge"]}" in
+            "forgejo")
+                curl "https://${r["host"]}/api/v1/repos/${r["owner"]}/${r["repo"]}/commits?limit=1"
+                ;;
+            "github")
+                curl \
+                    "${CURL_GITHUB_HEADERS[@]}" \
+                    "https://api.${r["host"]}/repos/${r["owner"]}/${r["repo"]}/commits?per_page=1"
+                ;;
+            esac
+        )
+    then
         error "$ret"
         fatal "failed to get the commits"
     fi
