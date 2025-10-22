@@ -138,33 +138,38 @@ get_packages()
 
     info "querying the package registry..."
 
-    local metadata
-    if ! ret=$(
-        curl \
-            --header "$GITLAB_AUTH_HEADER" \
-            "https://gitlab.com/api/v4/projects/$GITLAB_PROJECT_ID/packages"
-    ); then
-        error "$ret"
-        fatal "failed to fetch the packages metadata"
-    fi
-    metadata="$ret"
+    local page=1
+    while true; do
+        local metadata
+        if ! ret=$(
+            curl \
+                --header "$GITLAB_AUTH_HEADER" \
+                "https://gitlab.com/api/v4/projects/$GITLAB_PROJECT_ID/packages?page=$page"
+        ); then
+            error "$ret"
+            fatal "failed to fetch the packages metadata"
+        fi
+        metadata="$ret"
 
-    [[ $metadata == "[]" ]] && return
+        [[ $metadata == "[]" ]] && return
 
-    local name_version_pairs
-    if ! ret=$(
-        jq -r '.[] | [.name, .version] | join(" ")' <<<"$metadata"
-    ); then
-        error "$ret"
-        fatal "failed to parse the name-version pairs from the packages metadata"
-    fi
-    name_version_pairs="$ret"
+        local name_version_pairs
+        if ! ret=$(
+            jq -r '.[] | [.name, .version] | join(" ")' <<<"$metadata"
+        ); then
+            error "$ret"
+            fatal "failed to parse the name-version pairs from the packages metadata"
+        fi
+        name_version_pairs="$ret"
 
-    {
-        while read -r name version; do
-            p["$name"]+=" $version"
-        done
-    } <<<"$name_version_pairs"
+        {
+            while read -r name version; do
+                p["$name"]+=" $version"
+            done
+        } <<<"$name_version_pairs"
+
+        ((page++))
+    done
 }
 
 fetch_source()
