@@ -454,7 +454,7 @@ get_latest_tag()
             for tag in "${tags_array[@]}"; do
                 local commit_sha
                 if ! ret=$(jq -r '.commit.sha' <<<"$tag"); then
-                    error $ret
+                    error "$ret"
                     fatal "failed to parse the commit hash"
                 fi
                 commit_sha="$ret"
