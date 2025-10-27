@@ -2,6 +2,7 @@ name                     forge   host             owner         repo            
 addlicense               github  github.com       google        addlicense               .           go   vendor false false
 authenticator            gitlab  gitlab.gnome.org World         Authenticator            .           rust vendor false false
 bt                       github  github.com       LeperGnome    bt                       .           go   vendor false false
+codebook                 github  github.com       blopker       codebook                 .           rust vendor false false
 golangci-lint-langserver github  github.com       nametake      golangci-lint-langserver .           go   vendor false false
 ios-safari-remote-debug  forgejo git.gay          besties       ios-safari-remote-debug  .           go   vendor true  false
 mousai                   github  github.com       SeaDve        Mousai                   .           rust vendor false false
