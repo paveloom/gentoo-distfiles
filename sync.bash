@@ -207,7 +207,7 @@ prepare_source()
 
     info "preparing the source code..."
 
-    "$prepare_script_path"
+    "$prepare_script_path" || fatal "failed to prepare the source code"
 }
 
 download_deps_go()
