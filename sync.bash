@@ -515,8 +515,6 @@ get_latest_tag()
         version="$ret"
     fi
 
-    version=${version#v}
-
     local tarball_url
     case ${r["forge"]} in
     "forgejo" | "github")
@@ -530,6 +528,8 @@ get_latest_tag()
         tarball_url="https://${r["host"]}/${r["owner"]}/${r["repo"]}/-/archive/${version}/${r["repo"]}-${version}.tar.bz2"
         ;;
     esac
+
+    version=${version#v}
 
     rev["version"]="$version"
     rev["tarball_url"]="$tarball_url"
