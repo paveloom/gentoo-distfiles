@@ -5,6 +5,7 @@ bt                       github  github.com       LeperGnome    bt              
 codebook                 github  github.com       blopker       codebook                 .           rust vendor false false
 golangci-lint-langserver github  github.com       nametake      golangci-lint-langserver .           go   vendor false false
 identity                 gitlab  gitlab.gnome.org YaLTeR        identity                 .           rust vendor false false
+ignore-python            github  github.com       borsattoz     ignore-python            .           rust vendor false false
 ios-safari-remote-debug  forgejo git.gay          besties       ios-safari-remote-debug  .           go   vendor true  false
 mousai                   github  github.com       SeaDve        Mousai                   .           rust vendor false false
 neocmakelsp              github  github.com       neocmakelsp   neocmakelsp              .           rust vendor false false
