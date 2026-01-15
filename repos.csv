@@ -7,6 +7,7 @@ golangci-lint-langserver github  github.com       nametake      golangci-lint-la
 identity                 gitlab  gitlab.gnome.org YaLTeR        identity                 .           rust vendor false false
 ignore-python            github  github.com       borsattoz     ignore-python            .           rust vendor false false
 ios-safari-remote-debug  forgejo git.gay          besties       ios-safari-remote-debug  .           go   vendor true  false
+iwe                      github  github.com       iwe-org       iwe                      .           rust vendor false false
 mousai                   github  github.com       SeaDve        Mousai                   .           rust vendor false false
 neocmakelsp              github  github.com       neocmakelsp   neocmakelsp              .           rust vendor false false
 protorpc                 github  github.com       chai2010      protorpc                 .           go   vendor false false
