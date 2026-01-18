@@ -6,7 +6,6 @@ codebook                 github  github.com       blopker       codebook        
 golangci-lint-langserver github  github.com       nametake      golangci-lint-langserver .           go   vendor false false
 identity                 gitlab  gitlab.gnome.org YaLTeR        identity                 .           rust vendor false false
 ignore-python            github  github.com       borsattoz     ignore-python            .           rust vendor false false
-ios-safari-remote-debug  forgejo git.gay          besties       ios-safari-remote-debug  .           go   vendor true  false
 iwe                      github  github.com       iwe-org       iwe                      .           rust vendor false false
 markdown-oxide           github  github.com       Feel-ix-343   markdown-oxide           .           rust vendor false false
 mousai                   github  github.com       SeaDve        Mousai                   .           rust vendor false false
