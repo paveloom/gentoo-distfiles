@@ -268,6 +268,44 @@ download_deps_go()
     esac
 }
 
+download_deps_js()
+{
+    declare -n r=$1
+    declare -n rev=$2
+
+    local temp_dir="$3"
+    local deps_dir_name="$4"
+
+    local ret
+
+    cd "$temp_dir/source" || fatal "failed to switch to the source directory"
+    cd "${r["path"]}" || fatal "failed to switch to the main module directory"
+
+    if [[ ! -f package.json ]]; then
+        fatal "there is no \`package.json\` at the specified path"
+    fi
+
+    info "downloading the dependencies (\`${r["method"]} install\`)..."
+
+    case "${r["method"]}" in
+    "yarn")
+        local node_modules_dir="$temp_dir/$deps_dir_name/node_modules"
+
+        if ! ret=$(
+            yarn install \
+                --frozen-lockfile \
+                --modules-folder "$node_modules_dir" 2>&1
+        ); then
+            error "$ret"
+            fatal "failed to download the dependencies"
+        fi
+        ;;
+    *)
+        fatal "unknown method ${r["method"]}"
+        ;;
+    esac
+}
+
 download_deps_rust()
 {
     declare -n r=$1
@@ -312,6 +350,7 @@ download_deps()
 
     case "${r["lang"]}" in
     "go") download_deps_go record revision "$temp_dir" "$deps_dir_name" ;;
+    "js") download_deps_js record revision "$temp_dir" "$deps_dir_name" ;;
     "rust") download_deps_rust record revision "$temp_dir" "$deps_dir_name" ;;
     *)
         fatal "unknown language ${r["lang"]}"
