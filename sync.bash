@@ -290,7 +290,7 @@ download_deps_js()
     case "${r["method"]}" in
     "yarn")
         local node_modules_dir="$temp_dir/$deps_dir_name/"
-        node_modules_dir+="${r["name"]}-${rev["version"]}/${r["path"]}/"
+        node_modules_dir+="${r["repo"]}-${rev["version"]}/${r["path"]}/"
         node_modules_dir+="node_modules"
 
         if ! ret=$(
