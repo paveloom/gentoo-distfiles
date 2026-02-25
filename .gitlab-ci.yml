@@ -10,6 +10,6 @@ vendor:
   stage: vendor
   image: archlinux:latest
   before_script:
-    - pacman -Syu --noconfirm git go jq rust
+    - pacman -Syu --noconfirm git go jq rust yarn
   script:
     - ./sync.bash -p
