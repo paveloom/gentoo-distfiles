@@ -1,4 +1,5 @@
 .helix/
+.nvim.lua
 .zed/
 
 .env
