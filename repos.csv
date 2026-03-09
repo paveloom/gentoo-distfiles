@@ -12,6 +12,7 @@ mousai                   github  github.com       SeaDve        Mousai          
 neocmakelsp              github  github.com       neocmakelsp   neocmakelsp              .           rust vendor false false
 protorpc                 github  github.com       chai2010      protorpc                 .           go   vendor false false
 prowlarr                 github  github.com       Prowlarr      Prowlarr                 .           js   yarn   false false
+radarr                   github  github.com       Radarr        Radarr                   .           js   yarn   false false
 scooter                  github  github.com       thomasschafer scooter                  .           rust vendor false false
 sonarr                   github  github.com       Sonarr        Sonarr                   .           js   yarn   false false
 Throne                   github  github.com       throneproj    Throne                   core/server go   vendor false true
