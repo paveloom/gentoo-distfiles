@@ -250,10 +250,10 @@ download_deps_go()
         local vendor_dir
         case ${r["forge"]} in
         "forgejo")
-            vendor_dir="$temp_dir/$deps_dir_name/${r["name"]}/${r["path"]}/vendor"
+            vendor_dir="$temp_dir/$deps_dir_name/${r["repo"]}/${r["path"]}/vendor"
             ;;
         *)
-            vendor_dir="$temp_dir/$deps_dir_name/${r["name"]}-${rev["version"]}/${r["path"]}/vendor"
+            vendor_dir="$temp_dir/$deps_dir_name/${r["repo"]}-${rev["version"]}/${r["path"]}/vendor"
             ;;
         esac
 
