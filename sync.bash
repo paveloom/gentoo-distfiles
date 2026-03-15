@@ -394,7 +394,7 @@ compress_deps()
     if ! ret=$(
         tar \
             --sort=name \
-            --owner 0 --group 0 --numeric-owner --posix --mtime="1970-01-01" \
+            --owner 0 --group 0 --numeric-owner --posix --mtime="1970-01-01 00:00Z" \
             --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
             -C "$deps_dir_name" . -acf "$deps_dir_name.tar.xz" 2>&1
     ); then
