@@ -8,6 +8,7 @@ identity                 gitlab  gitlab.gnome.org YaLTeR        identity        
 ignore-python            github  github.com       borsattoz     ignore-python            .                       rust vendor false false
 iwe                      github  github.com       iwe-org       iwe                      .                       rust vendor false false
 markdown-oxide           github  github.com       Feel-ix-343   markdown-oxide           .                       rust vendor false false
+minify                   github  github.com       tdewolff      minify                   .                       go   vendor false false
 mousai                   github  github.com       SeaDve        Mousai                   .                       rust vendor false false
 neocmakelsp              github  github.com       neocmakelsp   neocmakelsp              .                       rust vendor false false
 protoc-gen-go-grpc       github  github.com       grpc          grpc-go                  cmd/protoc-gen-go-grpc  go   vendor false false
