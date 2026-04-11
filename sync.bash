@@ -30,12 +30,12 @@ debug()
 
 info()
 {
-    log "[INFO ]" "$*"
+    log "[INFO]" "$*"
 }
 
 warn()
 {
-    log "[WARN ]" "$*"
+    log "[WARN]" "$*"
 }
 
 error()
