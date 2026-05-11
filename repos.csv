@@ -3,6 +3,7 @@ addlicense               github  github.com       google        addlicense      
 authenticator            gitlab  gitlab.gnome.org World         Authenticator            .                       rust vendor false false
 bt                       github  github.com       LeperGnome    bt                       .                       go   vendor false false
 codebook                 github  github.com       blopker       codebook                 .                       rust vendor false false
+decoder                  gitlab  gitlab.gnome.org World         decoder                  .                       rust vendor false false
 golangci-lint-langserver github  github.com       nametake      golangci-lint-langserver .                       go   vendor false false
 identity                 gitlab  gitlab.gnome.org YaLTeR        identity                 .                       rust vendor false false
 ignore-python            github  github.com       borsattoz     ignore-python            .                       rust vendor false false
