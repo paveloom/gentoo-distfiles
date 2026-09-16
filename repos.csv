@@ -18,6 +18,6 @@ prowlarr                 github  github.com       Prowlarr      Prowlarr        
 radarr                   github  github.com       Radarr        Radarr                   .                       js   yarn   false false
 scooter                  github  github.com       thomasschafer scooter                  .                       rust vendor false false
 sonarr                   github  github.com       Sonarr        Sonarr                   .                       js   yarn   false false
-Throne                   github  github.com       throneproj    Throne                   core/server             go   vendor false true
+Throne                   github  github.com       throneproj    Throne                   core                    go   vendor false true
 webdav-server-rs         github  github.com       miquels       webdav-server-rs         .                       rust vendor true  false
 whisparr-eros            github  github.com       Whisparr      Whisparr-Eros            .                       js   yarn   false false
