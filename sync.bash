@@ -294,12 +294,13 @@ download_deps_js()
     case "${r["method"]}" in
     "npm")
         if ! ret=$(
-            npm install \
-                --cache "$node_modules_dir" 2>&1
+            npm install 2>&1
         ); then
             error "$ret"
             fatal "failed to download the dependencies"
         fi
+        mkdir -p "$node_modules_dir"
+        mv ./node_modules/* "$node_modules_dir"
         ;;
     "yarn")
         if ! ret=$(
