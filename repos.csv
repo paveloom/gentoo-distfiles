@@ -12,6 +12,7 @@ iwe                      github  github.com       iwe-org       iwe             
 markdown-oxide           github  github.com       Feel-ix-343   markdown-oxide           .                       rust vendor false false
 mousai                   github  github.com       SeaDve        Mousai                   .                       rust vendor false false
 neocmakelsp              github  github.com       neocmakelsp   neocmakelsp              .                       rust vendor false false
+playwright               github  github.com       microsoft     playwright               .                       js   npm    false false
 protoc-gen-go-grpc       github  github.com       grpc          grpc-go                  cmd/protoc-gen-go-grpc  go   vendor false false
 protorpc                 github  github.com       chai2010      protorpc                 .                       go   vendor false false
 prowlarr                 github  github.com       Prowlarr      Prowlarr                 .                       js   yarn   false false
