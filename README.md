@@ -9,6 +9,7 @@ Currently supported distribution file formats:
   - Dependency tarball (set `method` to `download`)
 - [JavaScript](https://en.wikipedia.org/wiki/JavaScript)
   - Node modules tarball
+    - Via `npm` (set `method` to `npm`)
     - Via `yarn` (set `method` to `yarn`)
 - [Rust](https://www.rust-lang.org)
   - Vendor tarball (set `method` to `vendor`)
@@ -26,6 +27,7 @@ Required binaries:
 - `curl`
 - `go`
 - `jq`
+- `npm`
 - `yarn`
 
 Additional binaries can be required by prepare scripts (see [./repos](./repos)).

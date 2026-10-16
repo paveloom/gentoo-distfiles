@@ -287,12 +287,21 @@ download_deps_js()
 
     info "downloading the dependencies (\`${r["method"]} install\`)..."
 
-    case "${r["method"]}" in
-    "yarn")
-        local node_modules_dir="$temp_dir/$deps_dir_name/"
-        node_modules_dir+="${r["repo"]}-${rev["version"]}/${r["path"]}/"
-        node_modules_dir+="node_modules"
+    local node_modules_dir="$temp_dir/$deps_dir_name/"
+    node_modules_dir+="${r["repo"]}-${rev["version"]}/${r["path"]}/"
+    node_modules_dir+="node_modules"
 
+    case "${r["method"]}" in
+    "npm")
+        if ! ret=$(
+            npm install \
+                --cache "$node_modules_dir" 2>&1
+        ); then
+            error "$ret"
+            fatal "failed to download the dependencies"
+        fi
+        ;;
+    "yarn")
         if ! ret=$(
             yarn install \
                 --frozen-lockfile \
